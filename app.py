@@ -36,15 +36,37 @@ List of things to do upon push notification:
 """
 
 
+# TODO: Fill out this function. (Does nothing now.)
+def send_emails(contributor_emails=[]):
+    """
+    Sends emails to contributors
+    :param contributor_emails:
+    :returns:
+    """
+    pass
+
+
+# TODO: Fill out this function. (Dummy now)
+def run_tests():
+    """
+    Runs tests and pipe the output into a file
+    :returns:
+    """
+    # Run some tests
+    # Inspect the test and provide summary on:
+    #  - number of test cases
+    #  - number passes
+    #  - number failures
+    # returns this information
+    pass
+
+
 @app.route("/payload/", methods=["POST"])
 def handle_webhooks():
     """
     This is our webhooks handler. Current Implementation only supports push events
     :returns:
     """
-    import pdb
-
-    pdb.set_trace()
     clone_url = request.json["repository"]["clone_url"]
     repo_name = request.json["repository"]["name"]
 
