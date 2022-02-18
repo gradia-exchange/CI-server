@@ -77,9 +77,7 @@ def send_email_notifications(output_file_path):
 
     message.attachment = attachment
 
-    sender_instance = SendGridAPIClient(
-        "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"
-    )  # os.environ.get("SENDGRID_API_KEY"))
+    sender_instance = SendGridAPIClient(os.environ.get("SENDGRID_API_KEY"))
     try:
         return sender_instance.send(message)
     except Exception as e:
