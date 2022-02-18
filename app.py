@@ -110,7 +110,7 @@ def handle_webhooks():
     # clone_url = request.json["repository"]["clone_url"]
     repo_name = request.json["repository"]["name"]
 
-    config_script = os.path.join(os.getcwd(), ".configs", f"{repo_name}-config.sh")
+    config_script = os.path.join(BASE_WORK_DIR, ".configs", f"{repo_name}-config.sh")
     args = ["/bin/sh", config_script]
 
     p = subprocess.Popen(args, stdin=PIPE, stdout=PIPE)
