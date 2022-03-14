@@ -1,0 +1,18 @@
+clone_url: git@github.com:gradia-exchange/GRADIA_lab.git
+name: GRADIA_lab
+repository_path: /var/www/sites/gradia_lab_website/
+
+testing:
+  - before_all:
+    - create virtualenv
+    - source venv/bin/activate 
+    - pip install -r requirements39.txt
+
+  - backend: 
+    - command: source venv/bin/activate
+
+  - linting:
+    - command: black --line-length 117 --exclude '^.*\b(migrations)\b.*$' --check django_backend selenium_tests
+
+  - frontend_build:
+    - command: npm run build
