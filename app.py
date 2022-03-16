@@ -3,7 +3,7 @@ from subprocess import PIPE
 import os
 from pathlib import Path
 
-from .script import ScriptExecutionThread
+from scripts import ScriptExecutionThread
 
 from flask import Flask, request
 
@@ -36,7 +36,9 @@ def handle_webhooks():
     """
     repo_name = request.json["repository"]["name"]
 
-    execution_thread = ScriptExecutionThread(work_path=BASE_WORK_DIR, repo_name=repo_name)
+    execution_thread = ScriptExecutionThread(
+        work_path=BASE_WORK_DIR, repo_name=repo_name
+    )
     execution_thread.start()
 
     return {"status": "ok"}
