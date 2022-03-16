@@ -15,9 +15,7 @@ BASE_DIR = os.getcwd()
 
 class ExtractionMethodsTests(unittest.TestCase):
     def setUp(self):
-        dep_output_file_path = os.path.join(
-            BASE_DIR, ".configs", "dependency_output.txt"
-        )
+        dep_output_file_path = os.path.join(BASE_DIR, ".configs", "dependency_output.txt")
         self.dep_text_output = ""
         with open(dep_output_file_path, "r") as file:
             self.dep_text_output += file.read()
@@ -47,9 +45,7 @@ class ExtractionMethodsTests(unittest.TestCase):
 
     def test_extract_django_unittests_output(self):
         output = extract_django_unittests_output(self.text_output.split("\n"))
-        self.assertTrue(
-            output[0].startswith("============================= test session")
-        )
+        self.assertTrue(output[0].startswith("============================= test session"))
         self.assertTrue(output[-1].startswith("============= 18 failed, 176 passed,"))
         self.assertEqual(len(output), 606)
 
