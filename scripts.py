@@ -82,6 +82,7 @@ def log_output(output: str, base_path: str) -> str:
 
 class ScriptExecutionThread(Thread):
     def __init__(self, work_path: str, repo_name: str) -> None:
+        Thread.__init__(self)
         self.work_path = work_path
         self.repo_name = repo_name
 

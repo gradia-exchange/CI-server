@@ -36,9 +36,7 @@ def handle_webhooks():
     """
     repo_name = request.json["repository"]["name"]
 
-    execution_thread = ScriptExecutionThread(
-        work_path=BASE_WORK_DIR, repo_name=repo_name
-    )
+    execution_thread = ScriptExecutionThread(work_path=BASE_WORK_DIR, repo_name=repo_name)
     execution_thread.start()
 
     return {"status": "ok"}
