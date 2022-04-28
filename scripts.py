@@ -27,7 +27,8 @@ CONTRIBUTORS_EMAIL = (
     "moseszeggey@yahoo.com",
     "davidyevu18@gmail.com",
     "jkwokchunkan@gmail.com",
-    "regioths@gmail.com"
+    "regioths@gmail.com",
+    "fatimatib44@gmail.com"
 )
 
 
