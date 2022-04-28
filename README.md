@@ -32,9 +32,9 @@ We built this platform mainly around github's webhook functionality.
 
 ##### Implementation Details
 Python / Flask is the main tech stack used in building the platform. It is very minimal. 
-It has the following url routes.
-`/`             -  Just for testing to be sure the server is up and running.
-`/payload/`     -  The endpoint where we receive the github push notifications.
+It has the following url routes.   
+`/`             -  Just for testing to be sure the server is up and running.    
+`/payload/`     -  The endpoint where we receive the github push notifications.    
 
 This web server is a multi-threading web server. This means, whenever it accepts a request, it passes it to an execution thread which runs the script and send the summary to the **involving parties**.
 
