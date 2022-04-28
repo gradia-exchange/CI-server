@@ -1,9 +1,10 @@
 import subprocess
-from subprocess import PIPE
 from threading import Thread
 import base64
 import os
 from datetime import datetime
+
+from dotenv import load_dotenv
 
 from sendgrid import SendGridAPIClient
 from sendgrid.helpers.mail import (
@@ -16,6 +17,9 @@ from sendgrid.helpers.mail import (
 )
 
 
+load_dotenv()
+
+
 CONTRIBUTORS_EMAIL = (
     "conradalwinho@gmail.com",
     "browndesmond30@yahoo.com",
@@ -23,6 +27,7 @@ CONTRIBUTORS_EMAIL = (
     "moseszeggey@yahoo.com",
     "davidyevu18@gmail.com",
     "jkwokchunkan@gmail.com",
+    "regioths@gmail.com"
 )
 
 
@@ -63,17 +68,19 @@ def send_email_notifications(output_file_path: str) -> None:
         print(e)  # .message)  # In V2, prob log the error
 
 
-def log_output(output: str, base_path: str) -> str:
+def log_output(id, output: str) -> str:
     """
     Saves output to a file and returns the file path
     :param output:
     :returns:
     """
-    save_directory_path = os.path.join(base_path, ".configs")
+    save_directory_path = os.environ.get("LOG_OUTPUT_PATH")
     if not os.path.exists(save_directory_path):
         os.mkdir(save_directory_path)
 
-    file_name = f"test-output-{datetime.now().strftime('%d-%m-%y-%HH:%MM:%SS')}.txt"
+    file_name = os.path.join(
+        save_directory_path, f"test-output-{datetime.now().strftime('%d-%m-%y-%HH:%MM:%SS')}-{id}.txt"
+    )
     with open(file_name, "w") as file:
         file.write(output)
 
@@ -81,22 +88,25 @@ def log_output(output: str, base_path: str) -> str:
 
 
 class ScriptExecutionThread(Thread):
-    def __init__(self, work_path: str, repo_name: str) -> None:
+    def __init__(self, repo_name: str, branch_name: str = "master", commit_hash: str = "") -> None:
         Thread.__init__(self)
-        self.work_path = work_path
+        self.work_path = os.environ.get("PROJECT_PATH")
         self.repo_name = repo_name
+        self.branch_name = branch_name
+        self.commit_hash = commit_hash
 
     def run(self) -> None:
         """
         Runs the config script, logs the output and send email notifications to contributors
         :returns:
         """
-        shell_script_path = os.path.join(self.work_path, ".configs", f"{self.repo_name}-config.sh")
-        args = ["/bin/sh", shell_script_path]
+        path_to_shells = os.environ.get("CONFIGS_PATH")
+        shell_script_path = os.path.join(path_to_shells, f"{self.repo_name}-config.sh")
 
-        p = subprocess.Popen(args, stdin=PIPE, stdout=PIPE)
-        string_output = p.stdout.read().decode()
+        args = ["/bin/bash", shell_script_path, self.branch_name, self.work_path]
 
-        output_path = log_output(string_output, self.work_path)
+        p = subprocess.run(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        string_output = p.stdout.decode("utf-8")
+        output_file_path = log_output(id=self.commit_hash, output=string_output)
 
-        send_email_notifications(output_path)
+        send_email_notifications(output_file_path)

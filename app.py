@@ -1,6 +1,5 @@
-import subprocess
-from subprocess import PIPE
 import os
+from subprocess import PIPE
 from pathlib import Path
 
 from scripts import ScriptExecutionThread
@@ -12,11 +11,7 @@ app = Flask(__name__)
 
 PORT = "8000"
 
-DEBUG = False  # Change to True during dev
-
-BASE_WORK_DIR = (
-    str(Path.home()) if DEBUG else "/var/www/sites/"
-)  # pythonanywhere directory (we are defaulting to use that 🤨)
+DEBUG = True  # Change to True during dev
 
 
 @app.route("/")
@@ -35,12 +30,14 @@ def handle_webhooks():
     :returns:
     """
     repo_name = request.json["repository"]["name"]
+    branch_name = request.json["ref"].split("/")[-1]
+    commit_hash = request.json["after"]
 
-    execution_thread = ScriptExecutionThread(work_path=BASE_WORK_DIR, repo_name=repo_name)
+    execution_thread = ScriptExecutionThread(repo_name=repo_name, branch_name=branch_name, commit_hash=commit_hash)
     execution_thread.start()
 
     return {"status": "ok"}
 
 
 if __name__ == "__main__":
-    app.run(port=PORT)
+    app.run(port=PORT, debug=DEBUG)
