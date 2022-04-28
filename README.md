@@ -73,6 +73,11 @@ After cloning the repo, `cd` into the project repo: `cd CI-SERVER` by default.
         # User user
         ```
     - Copy the newly generated deploy keys and add to the repo's settings on github: `https://github.com/{user}/{repo}.git` at the **Deploy Keys** tab.
+
+3. Add the shell script for running the tests
+    - write the shell script and save as `project_name-config.sh`
+    - save the shell script in the `CONFIGS_PATH`
+    - Test the shell script with the python script: `python run_script project_name`
 3. Voila!! All done.
 
 

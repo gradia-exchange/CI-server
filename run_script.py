@@ -1,13 +1,24 @@
 import subprocess
-from subprocess import PIPE
+import sys 
+import os 
+
+from dotenv import load_dotenv 
+
+
+load_dotenv()
+
+configs_path = os.environ.get("CONFIGS_PATH")
+project_base_directory = os.environ.get("PROJECT_PATH")
+project_name = sys.argv[1]
+shell_script = f"{os.path.join(configs_path, project_name)}-config.sh"
 
 
 def run_shell_script():
     args = [
         "/bin/bash",
-        "/home/user/.configs/gradia-lab-sample-config.sh",
-        "test-branch",
-        "/home/user/development/business/Gradia Limited/",
+        shell_script,
+        "master",
+        project_base_directory,
     ]
 
     output_stream = subprocess.run(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
