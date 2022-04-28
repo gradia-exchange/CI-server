@@ -5,6 +5,7 @@ GitPython==3.1.26
 itsdangerous==2.0.1
 Jinja2==3.0.3
 MarkupSafe==2.0.1
+python-dotenv==0.20.0
 python-http-client==3.3.6
 sendgrid==6.9.6
 smmap==5.0.0
