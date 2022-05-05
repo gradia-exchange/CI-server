@@ -32,8 +32,9 @@ def handle_webhooks():
     repo_name = request.json["repository"]["name"]
     branch_name = request.json["ref"].split("/")[-1]
     commit_hash = request.json["after"]
+    owner = request.json["repository"]["owner"]["name"]
 
-    execution_thread = ScriptExecutionThread(repo_name=repo_name, branch_name=branch_name, commit_hash=commit_hash)
+    execution_thread = ScriptExecutionThread(owner=owner, repo_name=repo_name, branch_name=branch_name, commit_hash=commit_hash)
     execution_thread.start()
 
     return {"status": "ok"}

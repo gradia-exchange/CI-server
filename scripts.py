@@ -89,8 +89,9 @@ def log_output(id, output: str) -> str:
 
 
 class ScriptExecutionThread(Thread):
-    def __init__(self, repo_name: str, branch_name: str = "master", commit_hash: str = "") -> None:
+    def __init__(self, owner: str, repo_name: str, branch_name: str = "master", commit_hash: str = "") -> None:
         Thread.__init__(self)
+        self.owner = owner
         self.work_path = os.environ.get("PROJECT_PATH")
         self.repo_name = repo_name
         self.branch_name = branch_name
@@ -102,7 +103,7 @@ class ScriptExecutionThread(Thread):
         :returns:
         """
         path_to_shells = os.environ.get("CONFIGS_PATH")
-        shell_script_path = os.path.join(path_to_shells, f"{self.repo_name}-config.sh")
+        shell_script_path = os.path.join(path_to_shells, self.owner, f"{self.repo_name}-config.sh")
 
         args = ["/bin/bash", shell_script_path, self.branch_name, self.work_path]
 
