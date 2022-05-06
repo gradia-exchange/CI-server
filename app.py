@@ -2,14 +2,14 @@ import os
 from subprocess import PIPE
 from pathlib import Path
 
-from scripts import ScriptExecutionThread
+from scripts import TestRunner
 
 from flask import Flask, request
 
 
 app = Flask(__name__)
 
-PORT = "8000"
+PORT = "8080"
 
 DEBUG = True  # Change to True during dev
 
@@ -34,7 +34,7 @@ def handle_webhooks():
     commit_hash = request.json["after"]
     owner = request.json["repository"]["owner"]["name"]
 
-    execution_thread = ScriptExecutionThread(owner=owner, repo_name=repo_name, branch_name=branch_name, commit_hash=commit_hash)
+    execution_thread = TestRunner(owner=owner, repo_name=repo_name, branch_name=branch_name, commit_hash=commit_hash)
     execution_thread.start()
 
     return {"status": "ok"}

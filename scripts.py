@@ -1,8 +1,11 @@
 import subprocess
-from threading import Thread
 import base64
 import os
 from datetime import datetime
+
+from rq import Queue 
+from rq.job import Job 
+from worker import conn
 
 from dotenv import load_dotenv
 
@@ -18,6 +21,8 @@ from sendgrid.helpers.mail import (
 
 
 load_dotenv()
+
+q = Queue(connection=conn)
 
 
 CONTRIBUTORS_EMAIL = (
@@ -88,27 +93,34 @@ def log_output(id, output: str) -> str:
     return file_name
 
 
-class ScriptExecutionThread(Thread):
+def run_test(owner: str, repo_name: str, branch_name: str ="master", commit_hash: str =""):
+    """
+    Runs the config script, logs the output and send email notifications to contributors
+    :returns:
+    """
+    work_path = os.environ.get("PROJECT_PATH")
+
+    path_to_shells = os.environ.get("CONFIGS_PATH")
+    shell_script_path = os.path.join(path_to_shells, owner, f"{repo_name}-config.sh")
+
+    args = ["/bin/bash", shell_script_path, branch_name, work_path]
+
+    p = subprocess.run(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    string_output = p.stdout.decode("utf-8")
+    output_file_path = log_output(id=commit_hash, output=string_output)
+
+    send_email_notifications(output_file_path)
+
+
+class TestRunner():
     def __init__(self, owner: str, repo_name: str, branch_name: str = "master", commit_hash: str = "") -> None:
-        Thread.__init__(self)
         self.owner = owner
         self.work_path = os.environ.get("PROJECT_PATH")
         self.repo_name = repo_name
         self.branch_name = branch_name
         self.commit_hash = commit_hash
 
-    def run(self) -> None:
-        """
-        Runs the config script, logs the output and send email notifications to contributors
-        :returns:
-        """
-        path_to_shells = os.environ.get("CONFIGS_PATH")
-        shell_script_path = os.path.join(path_to_shells, self.owner, f"{self.repo_name}-config.sh")
-
-        args = ["/bin/bash", shell_script_path, self.branch_name, self.work_path]
-
-        p = subprocess.run(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        string_output = p.stdout.decode("utf-8")
-        output_file_path = log_output(id=self.commit_hash, output=string_output)
-
-        send_email_notifications(output_file_path)
+    def start(self) -> None:
+        # Queue test runner here
+        job = q.enqueue_call(run_test, args=(self.owner, self.repo_name, self.branch_name, self.commit_hash,), result_ttl=5000)
+        print("Job queued:", job.get_id())
