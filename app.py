@@ -11,7 +11,7 @@ app = Flask(__name__)
 
 PORT = "8080"
 
-DEBUG = True  # Change to True during dev
+DEBUG = True 
 
 
 @app.route("/")
@@ -41,4 +41,4 @@ def handle_webhooks():
 
 
 if __name__ == "__main__":
-    app.run(port=PORT, debug=DEBUG)
+    app.run(port=PORT, debug=DEBUG)  # only is called during dev, but not called when deployed on pythonanywhere
