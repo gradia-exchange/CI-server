@@ -122,5 +122,5 @@ class TestRunner():
 
     def start(self) -> None:
         # Queue test runner here
-        job = q.enqueue_call(run_test, args=(self.owner, self.repo_name, self.branch_name, self.commit_hash,), result_ttl=5000)
+        job = q.enqueue_call(run_test, args=(self.owner, self.repo_name, self.branch_name, self.commit_hash,), result_ttl=5000, job_timeout="1h")
         print("Job queued:", job.get_id())
