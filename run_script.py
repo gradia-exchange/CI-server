@@ -13,8 +13,6 @@ author = sys.argv[1]
 project_name = sys.argv[2]
 shell_script = f"{os.path.join(configs_path, author, project_name)}-config.sh"
 
-import pdb; pdb.set_trace()
-
 
 def run_shell_script():
     args = [
