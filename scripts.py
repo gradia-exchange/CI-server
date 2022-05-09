@@ -74,18 +74,18 @@ def send_email_notifications(output_file_path: str) -> None:
         print(e)  # .message)  # In V2, prob log the error
 
 
-def log_output(id, output: str) -> str:
+def log_output(id: str, output: str, project_name, author: str = "gradia-exchange") -> str:
     """
     Saves output to a file and returns the file path
     :param output:
     :returns:
     """
-    save_directory_path = os.environ.get("LOG_OUTPUT_PATH")
+    save_directory_path = os.path.join(os.environ.get("LOG_OUTPUT_PATH"), author)   #  /home/gradiastaging/test-logs/kali-physi-hacker
     if not os.path.exists(save_directory_path):
         os.mkdir(save_directory_path)
 
     file_name = os.path.join(
-        save_directory_path, f"test-output-{datetime.now().strftime('%d-%m-%y-%HH:%MM:%SS')}-{id}.txt"
+        save_directory_path, f"{project_name}-{id}-{datetime.now().strftime('%d-%m-%y-%HH:%MM:%SS')}.txt"   # /home/gradiastaging/test-logs/kali-physi-hacker/GRADIA_lab-8484ad98489ad8af9sfa-09-05-2022-11:47:39.txt
     )
     with open(file_name, "w") as file:
         file.write(output)
@@ -107,7 +107,7 @@ def run_test(owner: str, repo_name: str, branch_name: str ="master", commit_hash
 
     p = subprocess.run(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     string_output = p.stdout.decode("utf-8")
-    output_file_path = log_output(id=commit_hash, output=string_output)
+    output_file_path = log_output(id=commit_hash, project_name=repo_name, output=string_output, author=owner)
 
     send_email_notifications(output_file_path)
 
