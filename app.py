@@ -11,7 +11,7 @@ app = Flask(__name__)
 
 PORT = "8080"
 
-DEBUG = True 
+DEBUG = True
 
 
 @app.route("/")
@@ -30,11 +30,16 @@ def handle_webhooks():
     :returns:
     """
     repo_name = request.json["repository"]["name"]
-    branch_name = request.json["ref"].split("/")[-1]
-    commit_hash = request.json["after"]
-    owner = request.json["repository"]["owner"]["name"]
+    branch_name = request.json["branches"][0]["name"]
+    commit_hash = request.json["sha"]
+    owner = request.json["repository"]["owner"]["login"]
 
-    execution_thread = TestRunner(owner=owner, repo_name=repo_name, branch_name=branch_name, commit_hash=commit_hash)
+    execution_thread = TestRunner(
+        owner=owner,
+        repo_name=repo_name,
+        branch_name=branch_name,
+        commit_hash=commit_hash,
+    )
     execution_thread.start()
 
     return {"status": "ok"}

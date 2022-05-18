@@ -3,8 +3,8 @@ import base64
 import os
 from datetime import datetime
 
-from rq import Queue 
-from rq.job import Job 
+from rq import Queue
+from rq.job import Job
 from worker import conn
 
 from dotenv import load_dotenv
@@ -33,7 +33,7 @@ CONTRIBUTORS_EMAIL = (
     "davidyevu18@gmail.com",
     "jkwokchunkan@gmail.com",
     "regioths@gmail.com",
-    "fatimatib44@gmail.com"
+    "fatimatib44@gmail.com",
 )
 
 
@@ -80,12 +80,15 @@ def log_output(id: str, output: str, project_name, author: str = "gradia-exchang
     :param output:
     :returns:
     """
-    save_directory_path = os.path.join(os.environ.get("LOG_OUTPUT_PATH"), author)   #  /home/gradiastaging/test-logs/kali-physi-hacker
+    save_directory_path = os.path.join(
+        os.environ.get("LOG_OUTPUT_PATH"), author
+    )  #  /home/gradiastaging/test-logs/kali-physi-hacker
     if not os.path.exists(save_directory_path):
         os.mkdir(save_directory_path)
 
     file_name = os.path.join(
-        save_directory_path, f"{project_name}-{id}-{datetime.now().strftime('%d-%m-%y-%HH:%MM:%SS')}.txt"   # /home/gradiastaging/test-logs/kali-physi-hacker/GRADIA_lab-8484ad98489ad8af9sfa-09-05-2022-11:47:39.txt
+        save_directory_path,
+        f"{project_name}-{id}-{datetime.now().strftime('%d-%m-%y-%HH:%MM:%SS')}.txt",  # /home/gradiastaging/test-logs/kali-physi-hacker/GRADIA_lab-8484ad98489ad8af9sfa-09-05-2022-11:47:39.txt
     )
     with open(file_name, "w") as file:
         file.write(output)
@@ -93,7 +96,7 @@ def log_output(id: str, output: str, project_name, author: str = "gradia-exchang
     return file_name
 
 
-def run_test(owner: str, repo_name: str, branch_name: str ="master", commit_hash: str =""):
+def run_test(owner: str, repo_name: str, branch_name: str = "master", commit_hash: str = ""):
     """
     Runs the config script, logs the output and send email notifications to contributors
     :returns:
@@ -112,7 +115,7 @@ def run_test(owner: str, repo_name: str, branch_name: str ="master", commit_hash
     send_email_notifications(output_file_path)
 
 
-class TestRunner():
+class TestRunner:
     def __init__(self, owner: str, repo_name: str, branch_name: str = "master", commit_hash: str = "") -> None:
         self.owner = owner
         self.work_path = os.environ.get("PROJECT_PATH")
@@ -122,5 +125,15 @@ class TestRunner():
 
     def start(self) -> None:
         # Queue test runner here
-        job = q.enqueue(run_test, args=(self.owner, self.repo_name, self.branch_name, self.commit_hash,), result_ttl=5000, job_timeout="1h")
+        job = q.enqueue(
+            run_test,
+            args=(
+                self.owner,
+                self.repo_name,
+                self.branch_name,
+                self.commit_hash,
+            ),
+            result_ttl=5000,
+            job_timeout="1h",
+        )
         print("Job queued:", job.get_id())
