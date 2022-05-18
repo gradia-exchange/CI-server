@@ -62,14 +62,17 @@ After cloning the repo, `cd` into the project repo: `cd CI-SERVER` by default.
 1. Setup webhook url to that repo.
     Github accepts only `https` schemes. So for devs:
     - We use [ngrok](https://ngrok.com/) to open our `server:port` to the internet and get an `https` scheme url.
-        - This url is temporal and changes everytime you restart the ngrok server and that is because it the free version.
-2. Setup deploy keys for that repo. Get deploy keys from deployment server and set for that repo.
+        - This url is temporal and changes everytime you restart the ngrok server and that is because it's the free version.
+        - This is not specific to GRADIA projects on python anywhere.
+        - With GRADIA projects configurations, the Payload URL is (https://gradiastaging.pythonanywhere.com/payload/)
+    - Content type (application/json)
+2. Setup deploy keys for that repo. Get deploy keys from deployment server(pythonanywhere.com) and set for that repo.
     - Here, generate a new ssh key (that is going to be our deploy key) on the server with the name (`id_rsa_repo_name`) and no passphrase. `ssh-keygen -t rsa -C “Deploy key for Repo Name”`
-    - Add this newly generated ssh key to the git config file (`~/.ssh/config`) as follows (assuming `/home/user/.ssh/id_rsa_repo_name` is the full path to the newly generated ssh key and `user` is the name of the server username):
+    - Add this newly generated ssh key to the git config file (`~/.ssh/config`) as follows (assuming `/home/user/.ssh/{github-profile-name}/id_rsa_repo_name` is the full path to the newly generated ssh key and `user` is the name of the server username):
         ```
         Host id_rsa_repo_name_alias github.com
         Hostname github.com
-        IdentityFile /home/user/.ssh/id_rsa_repo_name
+        IdentityFile /home/user/.ssh/{github-profile-name}/id_rsa_repo_name
         # User user
         ```
     - Copy the newly generated deploy keys and add to the repo's settings on github: `https://github.com/{user}/{repo}.git` at the **Deploy Keys** tab.
