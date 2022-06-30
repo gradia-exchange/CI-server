@@ -29,10 +29,11 @@ def handle_webhooks():
     This is our webhooks handler. Current Implementation only supports push events
     :returns:
     """
+    # get repo name
     repo_name = request.json["repository"]["name"]
-    branch_name = request.json["branches"][0]["name"]
-    commit_hash = request.json["sha"]
-    owner = request.json["repository"]["owner"]["login"]
+    branch_name = request.json["ref"].split("/")[-1]
+    owner = request.json["pusher"]["name"]
+    commit_hash = request.json["head_commit"]["id"]
 
     execution_thread = TestRunner(
         owner=owner,
