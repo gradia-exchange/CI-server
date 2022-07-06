@@ -134,6 +134,7 @@ class TestRunner:
                 self.commit_hash,
             ),
             result_ttl=5000,
+            timeout=5000,
             job_timeout="1h",
         )
         print("Job queued:", job.get_id())
