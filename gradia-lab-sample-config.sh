@@ -6,9 +6,10 @@
 
 
 # variables
-branch_name=$1
-project_base_directory_path=$2
-project_directory_path="${project_base_directory_path}gradia-lab-sample"
+owner=$1
+branch_name=$2
+project_base_directory_path=$3
+project_directory_path="${project_base_directory_path}${owner}/gradia-lab-sample"
 underline="==================================================================="
 
 echo "branch name: $branch_name"
@@ -17,18 +18,18 @@ echo "project directory path: $project_directory_path"
 echo $underline 
 
 # create a virtualenv if it doesn't exist
-if [ ! -d "~/.environments/gradia-lab-sample/" ]; then 
+if [ ! -d "~/.environments/${owner}/gradia-lab-sample/" ]; then 
     echo "Creating python virtual environment..."
     echo $underline
-    mkdir -p ~/.environments
-    python3 -m venv ~/.environments/gradia-lab-sample
+    mkdir -p "~/.environments/${owner}"
+    python3 -m venv "~/.environments/${owner}/gradia-lab-sample"
     echo $underline
 fi
 
 # active virtual env 
 echo "Activating python virtual environment.."
 echo $underline
-source ~/.environments/gradia-lab-sample/bin/activate
+source "~/.environments/${owner}/gradia-lab-sample/bin/activate"
 echo $underline 
 
 if [! -d $project_directory_path ]; then 
@@ -36,7 +37,7 @@ if [! -d $project_directory_path ]; then
     echo "Project does not exit"
     echo "Cloning Project..."
     pushd "$project_base_directory_path"
-    git clone git@github.com:kali-physi-hacker/GRADIA_lab.git
+    git clone "$owner-gradia-lab-sample:${owner}/gradia-lab-sample.git"
 fi
 echo "changing directory to: $project_directory_path"
 pushd "$project_directory_path"
