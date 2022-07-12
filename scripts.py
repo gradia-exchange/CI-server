@@ -1,7 +1,10 @@
+from asyncio.constants import ACCEPT_RETRY_DELAY
 import subprocess
 import base64
 import os
 from datetime import datetime
+import re 
+import requests
 
 from rq import Queue
 from rq.job import Job
@@ -35,6 +38,38 @@ CONTRIBUTORS_EMAIL = (
     "regioths@gmail.com",
     "fatimatib44@gmail.com",
 )
+
+
+class GithubChecks:
+    PENDING = "pending"
+    FAILED = "failed"
+    ERROR = "error"
+    SUCCESS = "success"
+
+    ACCEPTED_STATUSES = [PENDING, FAILED, ERROR, SUCCESS]
+
+    def __init__(self, token, author: str, repo: str, sha: str):
+        header_config = {
+            "Accept": "application/vnd.github+json",
+            "Authorization": f"token {token}"
+        }
+        checks_url = f"https://api.github.com/repos/{author}/{repo}/statuses/{sha}"
+    
+    def create_status(self, status: str, context=None, description=""):
+        """
+        Creates a github check 
+        :param status: (values accepted: pending, failed, error)
+        :param context: (name of the check)
+        :param description:
+        :returns:
+        """
+        assert status in self.ACCEPTED_STATUSES, f"status needs be either of {','.join(self.ACCEPTED_STATUSES)}"
+        if context is None:
+            context = "test case"
+
+        response = requests.post(self.checks_url, headers=self.header_config, json={"status": status, "context": context, "description": description})
+        if response.status_code != 201:
+            return   # TODO: log this error in the future (for debugging purposes)
 
 
 def send_email_notifications(output_file_path: str) -> None:
@@ -108,6 +143,29 @@ def run_test(owner: str, repo_name: str, branch_name: str = "master", commit_has
 
     args = ["/bin/bash", shell_script_path, branch_name, work_path]
 
+    process = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+    context = ""
+    github_checks = GithubChecks(token="", author=owner, repo=repo_name, sha=commit_hash)
+    while True:
+        output = process.stdout.readline() 
+        # first line has all the contexts
+        contexts = [context.strip() for context in output.decode().strip().lstrip("All Contexts: ").split(",")]
+        for context in contexts:
+            github_checks.create_status(status=github_checks.PENDING, context=context, description="test case is still running")
+
+        if output == "" and process.poll() is not None:
+            break 
+        if output:
+            context_found = re.match(r"^Context:", output.decode.strip())
+            if context is not None:
+                context = output.decode().strip().lstrip("Context: ")
+            
+            # inspect the output 
+            #   if the output has the output string is ERROR string send the ERROR checks
+            if output.decode().strip().lstrip("status: ") == "error": ## TODO: not done yet. 
+                github_checks.create_status(status=github_checks.ERROR, context=context, description="Test failed")
+                pass
+            
     p = subprocess.run(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     string_output = p.stdout.decode("utf-8")
     output_file_path = log_output(id=commit_hash, project_name=repo_name, output=string_output, author=owner)
