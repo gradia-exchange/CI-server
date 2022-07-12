@@ -11,13 +11,14 @@ configs_path = os.environ.get("CONFIGS_PATH")
 project_base_directory = os.environ.get("PROJECT_PATH")
 author = sys.argv[1]
 project_name = sys.argv[2]
-shell_script = f"{os.path.join(configs_path, author, project_name)}-config.sh"
+shell_script = f"{os.path.join(configs_path, project_name)}-config.sh"
 
 
 def run_shell_script():
     args = [
         "/bin/bash",
         shell_script,
+        author,
         "master",
         project_base_directory,
     ]
