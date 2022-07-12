@@ -49,11 +49,11 @@ class GithubChecks:
     ACCEPTED_STATUSES = [PENDING, FAILED, ERROR, SUCCESS]
 
     def __init__(self, token, author: str, repo: str, sha: str):
-        header_config = {
+        self.header_config = {
             "Accept": "application/vnd.github+json",
             "Authorization": f"token {token}"
         }
-        checks_url = f"https://api.github.com/repos/{author}/{repo}/statuses/{sha}"
+        self.checks_url = f"https://api.github.com/repos/{author}/{repo}/statuses/{sha}"
     
     def create_status(self, status: str, context=None, description=""):
         """
@@ -67,7 +67,9 @@ class GithubChecks:
         if context is None:
             context = "test case"
 
+        import pdb; pdb.set_trace()
         response = requests.post(self.checks_url, headers=self.header_config, json={"status": status, "context": context, "description": description})
+        import pdb; pdb.set_trace()
         if response.status_code != 201:
             return   # TODO: log this error in the future (for debugging purposes)
 
@@ -145,12 +147,13 @@ def run_test(owner: str, repo_name: str, branch_name: str = "master", commit_has
 
     process = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
     context = ""
-    github_checks = GithubChecks(token="", author=owner, repo=repo_name, sha=commit_hash)
+    github_checks = GithubChecks(token="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", author=owner, repo=repo_name, sha=commit_hash)   # Change token to use .env tokens
     while True:
         output = process.stdout.readline() 
         # first line has all the contexts
         contexts = [context.strip() for context in output.decode().strip().lstrip("All Contexts: ").split(",")]
         for context in contexts:
+            # import pdb; pdb.set_trace()
             github_checks.create_status(status=github_checks.PENDING, context=context, description="test case is still running")
 
         if output == "" and process.poll() is not None:
