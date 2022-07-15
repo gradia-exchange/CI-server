@@ -6,10 +6,13 @@
 
 
 # variables
+set -e 
+echo "All Context: setup, dependency install, frontend build, linting checks, django unittests"
+echo "context: setup"
 owner=$1
 branch_name=$2
 project_base_directory_path=$3
-project_directory_path="${project_base_directory_path}${owner}/gradia-lab-sample"
+project_directory_path="${project_base_directory_path}${owner}gradia-lab-sample"
 underline="==================================================================="
 
 echo "branch name: $branch_name"
@@ -53,6 +56,9 @@ echo "Pulling changes..."
 echo $underline 
 git pull upstream $branch_name  # on pythonanywhere this will be `git pull origin frontend-looser-ratelimit`
 echo $underline 
+echo "status: success"
+
+echo "context: dependency install"
 
 # install requirements for both fresh and updated dependency instances 
 echo "Installing python dependencies..."
@@ -65,33 +71,60 @@ echo "Installing frontend (react) dependencies..."
 echo $underline
 cd frontend && npm install
 echo $underline
+eho "status: success"
 
-# running frontend build 
-echo "Building frontend (react) files..."
-echo $underline
-npm run build 
-echo $underline
-
+echo "context: frontend build"
+build(){(
+    # running frontend build 
+    echo "Building frontend (react) files..."
+    echo $underline
+    npm run build 
+    echo $underline
+)}
+exit_status=$?
+if [ ${exit_status} -ne 0]; then 
+    echo "status: error"
+else
+    echo "status: success"
+fi
 
 # Testing comes here
 
-# linting frontend
-echo "Checking linting..."
-echo $underline
-npm run lint
-echo $underline 
+echo "context: linting checks"
+linting(){(
+    # linting frontend
+    echo "Checking linting..."
+    echo $underline
+    npm run lint
+    echo $underline
 
-# linting backend 
-echo "Checking black formatting"
-echo $underline 
-cd .. && black --line-length 117 --exclude '^.*\b(migrations)\b.*$' --check django_backend selenium_tests
-echo $underline 
+    # linting backend 
+    echo "Checking black formatting"
+    echo $underline 
+    cd .. && black --line-length 117 --exclude '^.*\b(migrations)\b.*$' --check django_backend selenium_tests
+    echo $underline 
+)}
+exit_status=$1;
+if [ ${exit_status} -ne 0]; then 
+    echo "status: error"
+else
+    echo "status: success"
+fi
 
+echo "context: django unittests"
+unittests(){(
 # unittests
 echo "Running django unittests"
 echo $underline 
 cd django_backend && pytest 
 echo $underline 
+)}
+exit_status=$1;
+if [ ${exit_status} -ne 0]; then 
+    echo "status: error"
+else 
+    echo "status: success"
+fi
 
 # # selenium test
 # cd ../selenium_tests && pytest 
