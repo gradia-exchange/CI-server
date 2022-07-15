@@ -15,8 +15,6 @@ DEBUG = True
 
 load_dotenv()
 
-app.config["LOG_OUTPUT_DIRECTORY"] = os.environ["LOG_OUTPUT_PATH"]
-
 
 @app.route("/")
 def index():
@@ -64,7 +62,8 @@ def send_media(path):
     :param path:
     :returns:
     """
-    return send_from_directory(directory=app.config["LOG_OUTPUT_DIRECTORY"], path=path)
+
+    return send_from_directory(directory=os.environ["LOG_OUTPUT_PATH"], path=path)
 
 
 if __name__ == "__main__":
