@@ -26,20 +26,18 @@ def run_shell_script():
     process = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
     context = ""
     while True:
-        output = process.stdout.readline()
+        output = process.stdout.readline().decode().strip()
         if output == "" and process.poll() is not None:
             break 
         if output:
             # check for the line and find the context
+            context_found = re.match(r"^context: ", output)
+            if context_found:
+                print("Found:", output.lstrip("context:"))
             print(output.strip())
-            # print("return code:", process.returncode)
-            # import pdb; pdb.set_trace()
-            # context_found = re.match(r"^Context:", output.decode().strip())
-            # if context_found is not None:
-            #     context = output.decode().strip().lstrip("Context: ")
-            #     # Send 
 
-    rc = process.poll()
+
+    
 
     output_stream = subprocess.run(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     with open("test-output.txt", "w") as output_file:
