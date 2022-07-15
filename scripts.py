@@ -3,7 +3,6 @@ import subprocess
 import base64
 import os
 from datetime import datetime
-import re 
 import requests
 
 from rq import Queue
@@ -67,12 +66,10 @@ class GithubChecks:
         if context is None:
             context = "test case"
 
-        import pdb; pdb.set_trace()
-        response = requests.post(self.checks_url, headers=self.header_config, json={"status": status, "context": context, "description": description})
-        import pdb; pdb.set_trace()
+        response = requests.post(self.checks_url, headers=self.header_config, json={"state": status, "context": context, "description": description})
         if response.status_code != 201:
-            return   # TODO: log this error in the future (for debugging purposes)
-
+            # TODO: Better logging here
+            import pdb; pdb.set_trace()
 
 def send_email_notifications(output_file_path: str) -> None:
     """
@@ -108,7 +105,7 @@ def send_email_notifications(output_file_path: str) -> None:
     try:
         return sender_instance.send(message)
     except Exception as e:
-        print(e)  # .message)  # In V2, prob log the error
+        print(e)  # In V2, prob log the error
 
 
 def log_output(id: str, output: str, project_name, author: str = "gradia-exchange") -> str:
@@ -119,13 +116,12 @@ def log_output(id: str, output: str, project_name, author: str = "gradia-exchang
     """
     save_directory_path = os.path.join(
         os.environ.get("LOG_OUTPUT_PATH"), author
-    )  #  /home/gradiastaging/test-logs/kali-physi-hacker
-    if not os.path.exists(save_directory_path):
-        os.mkdir(save_directory_path)
+    ) 
+    os.makedirs(save_directory_path, exist_ok=True)
 
     file_name = os.path.join(
         save_directory_path,
-        f"{project_name}-{id}-{datetime.now().strftime('%d-%m-%y-%HH:%MM:%SS')}.txt",  # /home/gradiastaging/test-logs/kali-physi-hacker/GRADIA_lab-8484ad98489ad8af9sfa-09-05-2022-11:47:39.txt
+        f"{project_name}-{id}-{datetime.now().strftime('%d-%m-%y-%HH:%MM:%SS')}.txt",
     )
     with open(file_name, "w") as file:
         file.write(output)
@@ -146,28 +142,31 @@ def run_test(owner: str, repo_name: str, branch_name: str = "master", commit_has
     args = ["/bin/bash", shell_script_path, branch_name, work_path]
 
     process = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-    context = ""
-    github_checks = GithubChecks(token="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", author=owner, repo=repo_name, sha=commit_hash)   # Change token to use .env tokens
+
+    current_context = ""
+    auth_token = os.environ[(f"{owner}_github_token")]
+    github_checks = GithubChecks(token=auth_token, author=owner, repo=repo_name, sha=commit_hash)   # Change token to use .env tokens
     while True:
-        output = process.stdout.readline() 
+        output = process.stdout.readline().decode().strip()
+        if output.startswith("All Context: "):
         # first line has all the contexts
-        contexts = [context.strip() for context in output.decode().strip().lstrip("All Contexts: ").split(",")]
-        for context in contexts:
-            # import pdb; pdb.set_trace()
-            github_checks.create_status(status=github_checks.PENDING, context=context, description="test case is still running")
+            contexts = [context.strip() for context in output.lstrip("All Context:").split(",")]
+            for context in contexts:
+                github_checks.create_status(status=github_checks.PENDING, context=context, description="Your test is still running")
 
         if output == "" and process.poll() is not None:
             break 
         if output:
-            context_found = re.match(r"^Context:", output.decode.strip())
-            if context is not None:
-                context = output.decode().strip().lstrip("Context: ")
-            
             # inspect the output 
-            #   if the output has the output string is ERROR string send the ERROR checks
-            if output.decode().strip().lstrip("status: ") == "error": ## TODO: not done yet. 
-                github_checks.create_status(status=github_checks.ERROR, context=context, description="Test failed")
-                pass
+            if output.startswith("context:"):
+                current_context = output[8:].strip()
+            
+            if output.startswith("status:"):
+                status = output[7:].strip()
+                if status == "error":
+                    github_checks.create_status(status=github_checks.ERROR, context=current_context, description="Your tests failed on GradiaCI!")
+                else:
+                    github_checks.create_status(status=github_checks.SUCCESS, context=current_context, description="Your tests passed on GradiaCI!")
             
     p = subprocess.run(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     string_output = p.stdout.decode("utf-8")
