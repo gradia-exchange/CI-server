@@ -22,7 +22,7 @@ def get_connection(debug=False):
     return redis.from_url(redis_url)
 
 
-conn = get_connection(debug=True)
+conn = get_connection()
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("-m", "--mode", default=PRODUCTION, required=False, help="production vs development mode")
