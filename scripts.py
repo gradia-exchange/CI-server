@@ -139,7 +139,7 @@ def run_test(owner: str, repo_name: str, branch_name: str = "master", commit_has
     path_to_shells = os.environ.get("CONFIGS_PATH")
     shell_script_path = os.path.join(path_to_shells, f"{repo_name}-config.sh")
 
-    args = ["/bin/bash", shell_script_path, branch_name, work_path]
+    args = ["/bin/bash", shell_script_path, owner, branch_name, work_path]
 
     process = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
 
