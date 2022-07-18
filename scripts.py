@@ -171,14 +171,17 @@ def run_test(owner: str, repo_name: str, branch_name: str = "master", commit_has
         string_output += process.stdout.decode("utf-8")
 
         if process.returncode != 0:
+            if (current_context == "frontend_build" and process.returncode == 254):
+                pass
+            else:
             # send a github error check
-            github_checks.create_status(status=github_checks.FAILED, context=current_context, description="Your tests failed on GradiaCI!")
-            if current_context in dependency_scripts:
-                # send failed for all the other ones
-                for context in contexts[index+1:]:
-                    github_checks.create_status(status=github_checks.ERROR, context=context, description="Your tests did not complete on GradiaCI!")
-                break
-            continue 
+                github_checks.create_status(status=github_checks.FAILED, context=current_context, description="Your tests failed on GradiaCI!")
+                if current_context in dependency_scripts:
+                    # send failed for all the other ones
+                    for context in contexts[index+1:]:
+                        github_checks.create_status(status=github_checks.ERROR, context=context, description="Your tests did not complete on GradiaCI!")
+                    break
+                continue 
 
         # get the last line of the ouput and if it echo's success then send a github pass else send failed
         status = get_last_line(output=process.stdout)
