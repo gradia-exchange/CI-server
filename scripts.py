@@ -4,9 +4,9 @@ import base64
 import os
 from datetime import datetime
 import requests
+import glob
 
 from rq import Queue
-from rq.job import Job
 from worker import conn
 
 from dotenv import load_dotenv
@@ -41,7 +41,7 @@ CONTRIBUTORS_EMAIL = (
 
 class GithubChecks:
     PENDING = "pending"
-    FAILED = "failed"
+    FAILED = "failure"
     ERROR = "error"
     SUCCESS = "success"
 
@@ -128,7 +128,6 @@ def log_output(id: str, output: str, project_name, author: str = "gradia-exchang
 
     return file_name
 
-
 def run_test(owner: str, repo_name: str, branch_name: str = "master", commit_hash: str = ""):
     """
     Runs the config script, logs the output and send email notifications to contributors
@@ -137,39 +136,57 @@ def run_test(owner: str, repo_name: str, branch_name: str = "master", commit_has
     work_path = os.environ.get("PROJECT_PATH")
 
     path_to_shells = os.environ.get("CONFIGS_PATH")
-    shell_script_path = os.path.join(path_to_shells, f"{repo_name}-config.sh")
+    scripts_path = os.path.join(path_to_shells, repo_name)
+    scripts = sorted(glob.glob(f"{scripts_path}/*.sh"))
+    contexts = [os.path.basename(script)[:-3].split("-")[-1] for script in scripts]
 
-    args = ["/bin/bash", shell_script_path, owner, branch_name, work_path]
 
-    process = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+    def get_last_line(output):
+        lines = output.decode("utf-8").split("\n")
+        if lines[-1] == "":
+            return lines[-2]
+        
+        return lines[-1]
 
-    current_context = ""
+
     auth_token = os.environ[(f"{owner}_github_token")]
     github_checks = GithubChecks(token=auth_token, author=owner, repo=repo_name, sha=commit_hash)   # Change token to use .env tokens
-    while True:
-        output = process.stdout.readline().decode().strip()
-        if output.startswith("All Context: "):
-        # first line has all the contexts
-            contexts = [context.strip() for context in output.lstrip("All Context:").split(",")]
-            for context in contexts:
-                github_checks.create_status(status=github_checks.PENDING, context=context, description="Your test is still running")
 
-        if output == "" and process.poll() is not None:
-            break 
-        if output:
-            # inspect the output 
-            if output.startswith("context:"):
-                current_context = output[8:].strip()
-            
-            if output.startswith("status:"):
-                status = output[7:].strip()
-                if status == "error":
-                    github_checks.create_status(status=github_checks.ERROR, context=current_context, description="Your tests failed on GradiaCI!")
-                else:
-                    github_checks.create_status(status=github_checks.SUCCESS, context=current_context, description="Your tests passed on GradiaCI!")
-            
-    p = subprocess.run(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    string_output = p.stdout.decode("utf-8")
+    for context in contexts:
+        github_checks.create_status(status=github_checks.PENDING, context=context, description="Your test is still running")
+    
+    dependency_scripts = ["setup", "dependency_install"]
+
+    string_output = ""
+    for index, script in enumerate(scripts):
+        current_context = contexts[index]
+        args = [
+            "/bin/bash", 
+            script,
+            owner,
+            "master",
+            work_path
+        ]
+        process = subprocess.run(args, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+        string_output += process.stdout.decode("utf-8")
+
+        if process.returncode != 0:
+            # send a github error check
+            github_checks.create_status(status=github_checks.FAILED, context=current_context, description="Your tests failed on GradiaCI!")
+            if current_context in dependency_scripts:
+                # send failed for all the other ones
+                for context in contexts[index+1:]:
+                    github_checks.create_status(status=github_checks.ERROR, context=context, description="Your tests did not complete on GradiaCI!")
+                break
+            continue 
+
+        # get the last line of the ouput and if it echo's success then send a github pass else send failed
+        status = get_last_line(output=process.stdout)
+        if status == "status: success":
+            github_checks.create_status(status=github_checks.SUCCESS, context=current_context, description="Your tests passed on GradiaCI!")
+        else:
+            github_checks.create_status(status=github_checks.FAILED, context=current_context, description="Your tests failed on GradiaCI!")
+        
     output_file_path = log_output(id=commit_hash, project_name=repo_name, output=string_output, author=owner)
 
     send_email_notifications(output_file_path)
@@ -185,6 +202,7 @@ class TestRunner:
 
     def start(self) -> None:
         # Queue test runner here
+        print("queuing task...")
         job = q.enqueue(
             run_test,
             args=(
