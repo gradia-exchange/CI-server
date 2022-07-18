@@ -37,6 +37,7 @@ def run_shell_script():
     dependency_scripts = ["setup", "dependency_install"]
     print("All contexts:", contexts)
 
+    string_output = ""
     for index, script in enumerate(scripts):
         current_context = contexts[index]
 
@@ -48,6 +49,7 @@ def run_shell_script():
             project_base_directory
         ]
         process = subprocess.run(args, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+        string_output += process.stdout.decode("utf-8")
         if process.returncode != 0:
             # send a github error check
             print("errored at:", current_context)
@@ -68,8 +70,8 @@ def run_shell_script():
             print(f"{current_context}: failed")
             # github_checks.create_status(status=github_checks.ERROR, context=current_context, description="Your tests failed on GradiaCI!")
 
-        with open("test-output.txt", "a") as output_file:
-            output_file.write(process.stdout.decode("utf-8"))
+    with open("test-output.txt", "w") as output_file:
+        output_file.write(process.stdout.decode("utf-8"))
 
 
         # while True:
