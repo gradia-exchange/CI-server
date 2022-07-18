@@ -51,15 +51,18 @@ def run_shell_script():
         process = subprocess.run(args, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
         string_output += process.stdout.decode("utf-8")
         if process.returncode != 0:
-            # send a github error check
-            print("errored at:", current_context)
-            if current_context in dependency_scripts:
-                # send failed for all the other ones
-                for context in contexts[index+1:]:
-                    print("did not run:", context)
-                    # github_checks.create_status(status=github_checks.ERROR, context=context, description="Your tests failed on GradiaCI!")
-                break
-            continue 
+            if (current_context == "frontend_build" and process.returncode == 254):
+                pass
+            else:
+                # send a github error check
+                print("errored at:", current_context)
+                if current_context in dependency_scripts:
+                    # send failed for all the other ones
+                    for context in contexts[index+1:]:
+                        print("did not run:", context)
+                        # github_checks.create_status(status=github_checks.ERROR, context=context, description="Your tests failed on GradiaCI!")
+                    break
+                continue 
 
         # get the last line of the ouput and if it echo's success then send a github pass else send failed
         status = get_last_line(output=process.stdout)
