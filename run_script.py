@@ -71,7 +71,7 @@ def run_shell_script():
             # github_checks.create_status(status=github_checks.ERROR, context=current_context, description="Your tests failed on GradiaCI!")
 
     with open("test-output.txt", "w") as output_file:
-        output_file.write(process.stdout.decode("utf-8"))
+        output_file.write(string_output)
 
 
         # while True:
