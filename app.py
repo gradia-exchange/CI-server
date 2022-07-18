@@ -8,10 +8,6 @@ from scripts import TestRunner
 
 app = Flask(__name__)
 
-PORT = "8080"
-
-DEBUG = True
-
 
 load_dotenv()
 
@@ -51,6 +47,7 @@ def handle_webhooks():
         commit_hash=commit_hash,
     )
     execution_thread.start()
+    print("event received:", request)
 
     return {"status": "ok"}
 
@@ -67,4 +64,4 @@ def send_media(path):
 
 
 if __name__ == "__main__":
-    app.run(port=PORT, debug=DEBUG)  # only is called during dev, but not called when deployed on pythonanywhere
+    app.run(port=8080, debug=True)  # only is called during dev, but not called when deployed on pythonanywhere
