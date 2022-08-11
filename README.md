@@ -17,7 +17,9 @@ The process is as follows. The platform:
         - dependencies are installed
         - tests are run
     - A response is sent back to github, indicating the notification was received.
-3. After the push notification is received and processed (i.e. tests are run), emails are sent to **involving parties**.
+3. After the push notification is received and processed (i.e. tests are run), emails are sent to 
+Hello world
+**involving parties**.
 
 
 ### Contributing Guidelines
